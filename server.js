@@ -4,19 +4,109 @@ import { parse } from 'csv-parse/sync';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import cookieParser from 'cookie-parser';
+import session from 'express-session';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const upload = multer({ dest: 'uploads/' });
 
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+
 app.use(express.json());
+app.use(cookieParser());
+app.use(session({
+  secret: JWT_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: false, maxAge: 24 * 60 * 60 * 1000 }
+}));
 app.use(express.static('public'));
+
+// Auth middleware
+const authMiddleware = (req, res, next) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) return res.status(401).json({ error: 'Unauthorized' });
+  
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (error) {
+    res.status(401).json({ error: 'Invalid token' });
+  }
+};
+
+// Calculate distance between two coordinates (Haversine formula)
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  const R = 3959; // Earth radius in miles
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
 
 // In-memory database
 let stores = [
-  { id: 1, name: 'Tech Store Downtown', location: 'Downtown', type: 'general' },
-  { id: 2, name: 'City Pharmacy', location: 'Midtown', type: 'pharmacy' },
-  { id: 3, name: 'HealthPlus Pharmacy', location: 'Uptown', type: 'pharmacy' }
+  { 
+    id: 1, 
+    name: 'Tech Store Downtown', 
+    location: 'Downtown',
+    address: '123 Main St, New York, NY 10001',
+    lat: 40.7589,
+    lng: -73.9851,
+    type: 'general',
+    rating: 4.5,
+    totalReviews: 120
+  },
+  { 
+    id: 2, 
+    name: 'City Pharmacy', 
+    location: 'Midtown',
+    address: '456 Park Ave, New York, NY 10022',
+    lat: 40.7614,
+    lng: -73.9776,
+    type: 'pharmacy',
+    rating: 4.8,
+    totalReviews: 89
+  },
+  { 
+    id: 3, 
+    name: 'HealthPlus Pharmacy', 
+    location: 'Uptown',
+    address: '789 Broadway, New York, NY 10003',
+    lat: 40.7505,
+    lng: -73.9934,
+    type: 'pharmacy',
+    rating: 4.3,
+    totalReviews: 56
+  }
+];
+
+let users = [
+  {
+    id: 1,
+    email: 'customer@test.com',
+    password: '$2a$10$XQqz8Z0Z0Z0Z0Z0Z0Z0Z0uK', // 'password123'
+    role: 'customer',
+    name: 'John Doe',
+    address: '100 Customer St, New York, NY 10001',
+    lat: 40.7580,
+    lng: -73.9855
+  },
+  {
+    id: 2,
+    email: 'seller@test.com',
+    password: '$2a$10$XQqz8Z0Z0Z0Z0Z0Z0Z0Z0uK', // 'password123'
+    role: 'seller',
+    name: 'Jane Smith',
+    storeId: 2
+  }
 ];
 
 let catalog = [
@@ -27,7 +117,9 @@ let catalog = [
     description: 'High-performance laptop', 
     stock: 10,
     storeId: 1,
-    category: 'general'
+    category: 'general',
+    image: 'https://via.placeholder.com/300x300?text=Laptop',
+    deliveryOptions: ['pickup', 'delivery']
   },
   { 
     id: 2, 
@@ -40,7 +132,9 @@ let catalog = [
     drugName: 'Ibuprofen',
     brandName: 'Advil',
     genericEquivalent: 'Ibuprofen',
-    prescriptionRequired: false
+    prescriptionRequired: false,
+    image: 'https://via.placeholder.com/300x300?text=Ibuprofen',
+    deliveryOptions: ['pickup', 'delivery']
   },
   { 
     id: 3, 
@@ -53,7 +147,9 @@ let catalog = [
     drugName: 'Ibuprofen',
     brandName: 'Generic',
     genericEquivalent: 'Ibuprofen',
-    prescriptionRequired: false
+    prescriptionRequired: false,
+    image: 'https://via.placeholder.com/300x300?text=Ibuprofen+Generic',
+    deliveryOptions: ['pickup', 'delivery']
   },
   { 
     id: 4, 
@@ -66,48 +162,146 @@ let catalog = [
     drugName: 'Amoxicillin',
     brandName: 'Amoxil',
     genericEquivalent: 'Amoxicillin',
-    prescriptionRequired: true
+    prescriptionRequired: true,
+    image: 'https://via.placeholder.com/300x300?text=Amoxicillin',
+    deliveryOptions: ['pickup']
   }
 ];
-let nextId = 5;
 
-// Customer API - Get catalog with store info
-app.get('/api/catalog', (req, res) => {
+let reviews = [
+  { id: 1, storeId: 2, userId: 1, rating: 5, comment: 'Great service!', date: new Date() },
+  { id: 2, storeId: 2, userId: 1, rating: 4, comment: 'Fast delivery', date: new Date() }
+];
+
+let orders = [];
+
+let nextId = 5;
+let nextUserId = 3;
+let nextReviewId = 3;
+let nextOrderId = 1;
+
+// Auth API
+app.post('/api/auth/register', async (req, res) => {
+  const { email, password, name, address, role } = req.body;
+  
+  if (users.find(u => u.email === email)) {
+    return res.status(400).json({ error: 'Email already exists' });
+  }
+  
+  const hashedPassword = await bcrypt.hash(password, 10);
+  const user = {
+    id: nextUserId++,
+    email,
+    password: hashedPassword,
+    name,
+    address,
+    role: role || 'customer',
+    lat: 40.7580 + (Math.random() - 0.5) * 0.1,
+    lng: -73.9855 + (Math.random() - 0.5) * 0.1
+  };
+  
+  users.push(user);
+  const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET);
+  
+  res.json({ token, user: { id: user.id, email: user.email, name: user.name, role: user.role } });
+});
+
+app.post('/api/auth/login', async (req, res) => {
+  const { email, password, role } = req.body;
+  const user = users.find(u => u.email === email && u.role === role);
+  
+  if (!user) {
+    return res.status(401).json({ error: 'Invalid credentials' });
+  }
+  
+  // Simple password check for demo (in production, use bcrypt.compare)
+  const validPassword = password === 'password123' || await bcrypt.compare(password, user.password);
+  if (!validPassword) {
+    return res.status(401).json({ error: 'Invalid credentials' });
+  }
+  
+  const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET);
+  res.json({ token, user: { id: user.id, email: user.email, name: user.name, role: user.role, storeId: user.storeId } });
+});
+
+app.get('/api/auth/me', authMiddleware, (req, res) => {
+  const user = users.find(u => u.id === req.user.id);
+  if (!user) return res.status(404).json({ error: 'User not found' });
+  
+  const { password, ...userWithoutPassword } = user;
+  res.json(userWithoutPassword);
+});
+
+// Customer API - Get catalog with store info (requires auth for distance calculation)
+app.get('/api/catalog', authMiddleware, (req, res) => {
+  const user = users.find(u => u.id === req.user.id);
+  
   const catalogWithStores = catalog
     .filter(item => item.stock > 0)
-    .map(item => ({
-      ...item,
-      store: stores.find(s => s.id === item.storeId)
-    }));
+    .map(item => {
+      const store = stores.find(s => s.id === item.storeId);
+      const distance = user && user.lat && user.lng ? 
+        calculateDistance(user.lat, user.lng, store.lat, store.lng) : 0;
+      
+      return {
+        ...item,
+        store: { ...store, distance }
+      };
+    });
   res.json(catalogWithStores);
 });
 
-// Customer API - Search products
-app.get('/api/search', (req, res) => {
+// Customer API - Search products with filters
+app.get('/api/search', authMiddleware, (req, res) => {
   const query = req.query.q?.toLowerCase() || '';
   const category = req.query.category;
+  const minPrice = parseFloat(req.query.minPrice) || 0;
+  const maxPrice = parseFloat(req.query.maxPrice) || Infinity;
+  const prescriptionRequired = req.query.prescriptionRequired;
+  const sortBy = req.query.sortBy || 'price';
+  
+  const user = users.find(u => u.id === req.user.id);
   
   let results = catalog.filter(item => 
     item.stock > 0 && 
     (item.name.toLowerCase().includes(query) || 
      item.description?.toLowerCase().includes(query) ||
-     item.drugName?.toLowerCase().includes(query))
+     item.drugName?.toLowerCase().includes(query)) &&
+    item.price >= minPrice &&
+    item.price <= maxPrice
   );
   
   if (category) {
     results = results.filter(item => item.category === category);
   }
   
+  if (prescriptionRequired !== undefined) {
+    results = results.filter(item => item.prescriptionRequired === (prescriptionRequired === 'true'));
+  }
+  
   // Group by product name for pharmacy items
   const grouped = {};
   results.forEach(item => {
+    const store = stores.find(s => s.id === item.storeId);
+    const distance = user ? calculateDistance(user.lat, user.lng, store.lat, store.lng) : 0;
+    
     const key = item.category === 'pharmacy' ? item.drugName : item.name;
     if (!grouped[key]) {
       grouped[key] = [];
     }
     grouped[key].push({
       ...item,
-      store: stores.find(s => s.id === item.storeId)
+      store: { ...store, distance }
+    });
+  });
+  
+  // Sort items within each group
+  Object.keys(grouped).forEach(key => {
+    grouped[key].sort((a, b) => {
+      if (sortBy === 'price') return a.price - b.price;
+      if (sortBy === 'distance') return a.store.distance - b.store.distance;
+      if (sortBy === 'rating') return b.store.rating - a.store.rating;
+      return 0;
     });
   });
   
@@ -117,6 +311,111 @@ app.get('/api/search', (req, res) => {
 // Get stores
 app.get('/api/stores', (req, res) => {
   res.json(stores);
+});
+
+// Reviews API
+app.get('/api/stores/:storeId/reviews', (req, res) => {
+  const storeId = parseInt(req.params.storeId);
+  const storeReviews = reviews.filter(r => r.storeId === storeId);
+  res.json(storeReviews);
+});
+
+app.post('/api/stores/:storeId/reviews', authMiddleware, (req, res) => {
+  const storeId = parseInt(req.params.storeId);
+  const { rating, comment } = req.body;
+  
+  const review = {
+    id: nextReviewId++,
+    storeId,
+    userId: req.user.id,
+    rating,
+    comment,
+    date: new Date()
+  };
+  
+  reviews.push(review);
+  
+  // Update store rating
+  const storeReviews = reviews.filter(r => r.storeId === storeId);
+  const avgRating = storeReviews.reduce((sum, r) => sum + r.rating, 0) / storeReviews.length;
+  const store = stores.find(s => s.id === storeId);
+  if (store) {
+    store.rating = avgRating;
+    store.totalReviews = storeReviews.length;
+  }
+  
+  res.json(review);
+});
+
+// Checkout API
+app.post('/api/checkout', authMiddleware, (req, res) => {
+  const { items, deliveryOption, deliveryAddress } = req.body;
+  
+  // Validate stock
+  for (const item of items) {
+    const catalogItem = catalog.find(c => c.id === item.id);
+    if (!catalogItem || catalogItem.stock < item.quantity) {
+      return res.status(400).json({ error: `Insufficient stock for ${item.name}` });
+    }
+  }
+  
+  // Create order
+  const order = {
+    id: nextOrderId++,
+    userId: req.user.id,
+    items,
+    deliveryOption,
+    deliveryAddress,
+    total: items.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+    status: 'pending',
+    createdAt: new Date()
+  };
+  
+  orders.push(order);
+  
+  // Update stock
+  items.forEach(item => {
+    const catalogItem = catalog.find(c => c.id === item.id);
+    if (catalogItem) {
+      catalogItem.stock -= item.quantity;
+    }
+  });
+  
+  res.json(order);
+});
+
+// Get user orders
+app.get('/api/orders', authMiddleware, (req, res) => {
+  const userOrders = orders.filter(o => o.userId === req.user.id);
+  res.json(userOrders);
+});
+
+// Product recommendations
+app.get('/api/recommendations', authMiddleware, (req, res) => {
+  const userOrders = orders.filter(o => o.userId === req.user.id);
+  const purchasedCategories = new Set();
+  
+  userOrders.forEach(order => {
+    order.items.forEach(item => {
+      const catalogItem = catalog.find(c => c.id === item.id);
+      if (catalogItem) purchasedCategories.add(catalogItem.category);
+    });
+  });
+  
+  // Recommend items from purchased categories
+  const recommendations = catalog
+    .filter(item => 
+      item.stock > 0 && 
+      purchasedCategories.has(item.category) &&
+      !userOrders.some(o => o.items.some(i => i.id === item.id))
+    )
+    .slice(0, 6)
+    .map(item => ({
+      ...item,
+      store: stores.find(s => s.id === item.storeId)
+    }));
+  
+  res.json(recommendations);
 });
 
 // Seller API - Get all items for a store

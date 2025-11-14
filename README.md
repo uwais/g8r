@@ -24,13 +24,24 @@ Visit http://localhost:3000
 ## Features
 
 **Customer Portal** (/)
-- Browse available items
-- Add items to cart
-- View cart total
+- User authentication and profiles with delivery address
+- Browse catalog with product images
+- Advanced filtering (price range, prescription status, category)
+- Sort by price, distance, or store rating
+- Search products across multiple sellers
+- Compare prices and locations for same products
+- Product recommendations based on purchase history
+- Write and view store reviews/ratings
+- Shopping cart with quantity selection
+- Checkout with delivery or pickup options
+- Real-time stock updates
 
 **Seller Portal** (/seller.html)
-- View all catalog items
+- Seller authentication
+- View all catalog items by store
 - Add/edit/delete individual items
+- Product images and delivery options
+- Pharmacy-specific fields (drug name, brand, prescription flag)
 - Bulk upload via CSV
 
 ## CSV Format

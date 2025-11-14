@@ -1,6 +1,16 @@
+// Check authentication
+const user = checkAuth('seller');
+if (user) {
+  document.getElementById('userInfo').textContent = `Welcome, ${user.name}!`;
+  // Set store selector to user's store
+  if (user.storeId) {
+    document.getElementById('storeSelect').value = user.storeId;
+  }
+}
+
 async function loadItems() {
   const storeId = document.getElementById('storeSelect').value;
-  const response = await fetch(`/api/seller/items?storeId=${storeId}`);
+  const response = await authFetch(`/api/seller/items?storeId=${storeId}`);
   const items = await response.json();
   
   const tbody = document.getElementById('itemsBody');
@@ -37,6 +47,7 @@ function clearForm() {
   document.getElementById('itemPrice').value = '';
   document.getElementById('itemDescription').value = '';
   document.getElementById('itemStock').value = '';
+  document.getElementById('itemImage').value = '';
   document.getElementById('itemCategory').value = 'general';
   document.getElementById('drugName').value = '';
   document.getElementById('brandName').value = '';
@@ -53,7 +64,7 @@ function togglePharmacyFields() {
 
 async function editItem(id) {
   const storeId = document.getElementById('storeSelect').value;
-  const response = await fetch(`/api/seller/items?storeId=${storeId}`);
+  const response = await authFetch(`/api/seller/items?storeId=${storeId}`);
   const items = await response.json();
   const item = items.find(i => i.id === id);
   
@@ -62,6 +73,7 @@ async function editItem(id) {
   document.getElementById('itemPrice').value = item.price;
   document.getElementById('itemDescription').value = item.description;
   document.getElementById('itemStock').value = item.stock;
+  document.getElementById('itemImage').value = item.image || '';
   document.getElementById('itemCategory').value = item.category || 'general';
   
   if (item.category === 'pharmacy') {
@@ -85,8 +97,10 @@ async function saveItem() {
     price: parseFloat(document.getElementById('itemPrice').value),
     description: document.getElementById('itemDescription').value,
     stock: parseInt(document.getElementById('itemStock').value),
+    image: document.getElementById('itemImage').value || 'https://via.placeholder.com/300x300?text=Product',
     category: category,
-    storeId: parseInt(storeId)
+    storeId: parseInt(storeId),
+    deliveryOptions: ['pickup', 'delivery']
   };
   
   if (category === 'pharmacy') {
@@ -99,7 +113,7 @@ async function saveItem() {
   const url = id ? `/api/seller/items/${id}` : '/api/seller/items';
   const method = id ? 'PUT' : 'POST';
   
-  await fetch(url, {
+  await authFetch(url, {
     method,
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(item)
@@ -112,7 +126,7 @@ async function saveItem() {
 async function deleteItem(id) {
   if (!confirm('Delete this item?')) return;
   
-  await fetch(`/api/seller/items/${id}`, { method: 'DELETE' });
+  await authFetch(`/api/seller/items/${id}`, { method: 'DELETE' });
   loadItems();
 }
 
@@ -128,8 +142,12 @@ async function uploadCSV() {
   formData.append('file', fileInput.files[0]);
   formData.append('storeId', storeId);
   
+  const token = localStorage.getItem('token');
   const response = await fetch('/api/seller/upload-csv', {
     method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    },
     body: formData
   });
   

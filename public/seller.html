@@ -9,16 +9,22 @@
 <body>
   <nav>
     <h1>Seller Portal</h1>
-    <a href="index.html">Customer View</a>
+    <div>
+      <span id="userInfo"></span>
+      <button onclick="logout()">Logout</button>
+    </div>
   </nav>
   
   <main>
     <section class="actions">
-      <select id="storeSelect" onchange="loadItems()">
-        <option value="1">Tech Store Downtown</option>
-        <option value="2">City Pharmacy</option>
-        <option value="3">HealthPlus Pharmacy</option>
-      </select>
+      <div>
+        <label>Store:</label>
+        <select id="storeSelect" onchange="loadItems()">
+          <option value="1">Tech Store Downtown</option>
+          <option value="2">City Pharmacy</option>
+          <option value="3">HealthPlus Pharmacy</option>
+        </select>
+      </div>
       <button onclick="showAddForm()">Add New Item</button>
       <div class="csv-upload">
         <input type="file" id="csvFile" accept=".csv">
@@ -40,6 +46,7 @@
         <input type="number" id="itemPrice" placeholder="Price" step="0.01" required>
         <input type="text" id="itemDescription" placeholder="Description">
         <input type="number" id="itemStock" placeholder="Stock" required>
+        <input type="text" id="itemImage" placeholder="Image URL (optional)">
         
         <div id="pharmacyFields" style="display:none;">
           <input type="text" id="drugName" placeholder="Drug Name">
@@ -74,6 +81,7 @@
     </table>
   </main>
 
+  <script src="auth.js"></script>
   <script src="seller.js"></script>
 </body>
 </html>
