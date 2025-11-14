@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Store Catalog</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <nav>
+    <h1>Store Catalog</h1>
+    <a href="seller.html">Seller Portal</a>
+  </nav>
+  
+  <main>
+    <section class="search-section">
+      <h2>Search Products</h2>
+      <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="Search by name or drug name...">
+        <select id="categoryFilter">
+          <option value="">All Categories</option>
+          <option value="general">General</option>
+          <option value="pharmacy">Pharmacy</option>
+        </select>
+        <button onclick="searchProducts()">Search</button>
+        <button onclick="showAllProducts()">Show All</button>
+      </div>
+    </section>
+
+    <div id="searchResults"></div>
+    
+    <h2>All Available Items</h2>
+    <div id="catalog" class="catalog-grid"></div>
+    
+    <div id="cart">
+      <h3>Selected Items</h3>
+      <div id="cart-items"></div>
+    </div>
+  </main>
+
+  <script src="customer.js"></script>
+</body>
+</html>

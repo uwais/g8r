@@ -1,0 +1,6 @@
+name,price,description,stock,category,drugName,brandName,genericEquivalent,prescriptionRequired
+Aspirin,8.99,Pain reliever and fever reducer,200,pharmacy,Aspirin,Bayer,Aspirin,false
+Lisinopril,15.99,Blood pressure medication,75,pharmacy,Lisinopril,Prinivil,Lisinopril,true
+Metformin,22.99,Diabetes medication,60,pharmacy,Metformin,Glucophage,Metformin,true
+Vitamin D,12.99,Vitamin supplement,150,pharmacy,Vitamin D3,Nature Made,Cholecalciferol,false
+Omeprazole,18.99,Acid reflux medication,80,pharmacy,Omeprazole,Prilosec,Omeprazole,false

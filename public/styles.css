@@ -1,0 +1,274 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  line-height: 1.6;
+  color: #333;
+}
+
+nav {
+  background: #2c3e50;
+  color: white;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+nav a {
+  color: white;
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  background: #34495e;
+  border-radius: 4px;
+}
+
+main {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+
+.item-card {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1rem;
+  background: white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.item-card h3 {
+  margin-bottom: 0.5rem;
+}
+
+.item-card .price {
+  font-size: 1.5rem;
+  color: #27ae60;
+  font-weight: bold;
+}
+
+.item-card button {
+  width: 100%;
+  padding: 0.5rem;
+  background: #3498db;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 0.5rem;
+}
+
+.item-card button:hover {
+  background: #2980b9;
+}
+
+#cart {
+  margin-top: 2rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+#cart-items {
+  margin-top: 1rem;
+}
+
+.cart-item {
+  padding: 0.5rem;
+  background: white;
+  margin: 0.5rem 0;
+  border-radius: 4px;
+}
+
+.actions {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.actions button {
+  padding: 0.75rem 1.5rem;
+  background: #27ae60;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.csv-upload {
+  display: flex;
+  gap: 0.5rem;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+th, td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+th {
+  background: #34495e;
+  color: white;
+}
+
+.action-btn {
+  padding: 0.25rem 0.75rem;
+  margin: 0 0.25rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.edit-btn {
+  background: #3498db;
+  color: white;
+}
+
+.delete-btn {
+  background: #e74c3c;
+  color: white;
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  min-width: 400px;
+}
+
+.modal-content input {
+  width: 100%;
+  padding: 0.5rem;
+  margin: 0.5rem 0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.modal-content button {
+  padding: 0.5rem 1rem;
+  margin: 0.5rem 0.25rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.modal-content button {
+  padding: 0.5rem 1rem;
+  margin: 0.5rem 0.25rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.search-section {
+  margin-bottom: 2rem;
+}
+
+.search-bar {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.search-bar input {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.search-bar select {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.search-bar button {
+  padding: 0.5rem 1rem;
+  background: #3498db;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.product-group {
+  margin: 2rem 0;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.product-group h3 {
+  margin-bottom: 1rem;
+}
+
+.sort-options {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.sort-options button {
+  padding: 0.5rem 1rem;
+  background: #95a5a6;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.category-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  background: #3498db;
+  color: white;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  margin-bottom: 0.5rem;
+}
+
+.item-card.pharmacy .category-badge {
+  background: #e74c3c;
+}
+
+#pharmacyFields {
+  border-top: 1px solid #ddd;
+  padding-top: 1rem;
+  margin-top: 1rem;
+}
+
+#pharmacyFields label {
+  display: block;
+  margin: 0.5rem 0;
+}

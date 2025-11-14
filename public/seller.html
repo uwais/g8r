@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seller Portal</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <nav>
+    <h1>Seller Portal</h1>
+    <a href="index.html">Customer View</a>
+  </nav>
+  
+  <main>
+    <section class="actions">
+      <select id="storeSelect" onchange="loadItems()">
+        <option value="1">Tech Store Downtown</option>
+        <option value="2">City Pharmacy</option>
+        <option value="3">HealthPlus Pharmacy</option>
+      </select>
+      <button onclick="showAddForm()">Add New Item</button>
+      <div class="csv-upload">
+        <input type="file" id="csvFile" accept=".csv">
+        <button onclick="uploadCSV()">Upload CSV</button>
+      </div>
+    </section>
+
+    <div id="addForm" class="modal" style="display:none;">
+      <div class="modal-content">
+        <h3>Add/Edit Item</h3>
+        <input type="hidden" id="itemId">
+        
+        <select id="itemCategory" onchange="togglePharmacyFields()">
+          <option value="general">General Product</option>
+          <option value="pharmacy">Pharmacy Product</option>
+        </select>
+        
+        <input type="text" id="itemName" placeholder="Name" required>
+        <input type="number" id="itemPrice" placeholder="Price" step="0.01" required>
+        <input type="text" id="itemDescription" placeholder="Description">
+        <input type="number" id="itemStock" placeholder="Stock" required>
+        
+        <div id="pharmacyFields" style="display:none;">
+          <input type="text" id="drugName" placeholder="Drug Name">
+          <input type="text" id="brandName" placeholder="Brand Name">
+          <input type="text" id="genericEquivalent" placeholder="Generic Equivalent">
+          <label>
+            <input type="checkbox" id="prescriptionRequired">
+            Prescription Required
+          </label>
+        </div>
+        
+        <button onclick="saveItem()">Save</button>
+        <button onclick="hideAddForm()">Cancel</button>
+      </div>
+    </div>
+
+    <table id="itemsTable">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Category</th>
+          <th>Name</th>
+          <th>Drug Name</th>
+          <th>Brand</th>
+          <th>Rx</th>
+          <th>Price</th>
+          <th>Stock</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="itemsBody"></tbody>
+    </table>
+  </main>
+
+  <script src="seller.js"></script>
+</body>
+</html>
