@@ -5,39 +5,88 @@
 }
 
 body {
-  font-family: Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   line-height: 1.6;
   color: #333;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 nav {
   background: #2c3e50;
   color: white;
-  padding: 1rem 2rem;
+  padding: 1rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+nav h1 {
+  font-size: 1.25rem;
+  flex: 1;
+  min-width: 150px;
+}
+
+nav > div {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 nav a {
   color: white;
   text-decoration: none;
-  padding: 0.5rem 1rem;
+  padding: 0.5rem 0.75rem;
   background: #34495e;
   border-radius: 4px;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+nav button {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9rem;
 }
 
 main {
-  padding: 2rem;
+  padding: 1rem;
   max-width: 1200px;
   margin: 0 auto;
+  min-height: calc(100vh - 60px);
+}
+
+@media (min-width: 768px) {
+  main {
+    padding: 2rem;
+  }
 }
 
 .catalog-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 1.5rem;
-  margin: 2rem 0;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+@media (min-width: 480px) {
+  .catalog-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+}
+
+@media (min-width: 768px) {
+  .catalog-grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin: 2rem 0;
+  }
 }
 
 .item-card {
@@ -46,42 +95,78 @@ main {
   padding: 1rem;
   background: white;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
 }
 
 .item-card h3 {
   margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+}
+
+.item-card p {
+  font-size: 0.9rem;
+  margin: 0.25rem 0;
 }
 
 .item-card .price {
   font-size: 1.5rem;
   color: #27ae60;
   font-weight: bold;
+  margin: 0.5rem 0;
 }
 
 .item-card button {
   width: 100%;
-  padding: 0.5rem;
+  padding: 0.75rem;
   background: #3498db;
   color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
   margin-top: 0.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  touch-action: manipulation;
 }
 
-.item-card button:hover {
+.item-card button:active {
   background: #2980b9;
+  transform: scale(0.98);
+}
+
+@media (hover: hover) {
+  .item-card button:hover {
+    background: #2980b9;
+  }
 }
 
 #cart {
-  margin-top: 2rem;
+  margin-top: 1.5rem;
   padding: 1rem;
   background: #f8f9fa;
   border-radius: 8px;
+  position: sticky;
+  bottom: 0;
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+}
+
+#cart h3 {
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
 }
 
 #cart-items {
   margin-top: 1rem;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+@media (min-width: 768px) {
+  #cart {
+    position: static;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
 }
 
 .cart-item {
@@ -93,17 +178,47 @@ main {
 
 .actions {
   display: flex;
-  gap: 1rem;
-  margin-bottom: 2rem;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
 }
 
-.actions button {
-  padding: 0.75rem 1.5rem;
+.actions > * {
+  width: 100%;
+}
+
+.actions button,
+.actions select {
+  padding: 0.75rem;
   background: #27ae60;
   color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
+  font-size: 1rem;
+  touch-action: manipulation;
+}
+
+.actions select {
+  background: white;
+  color: #333;
+  border: 1px solid #ddd;
+}
+
+@media (min-width: 768px) {
+  .actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  
+  .actions > * {
+    width: auto;
+  }
+  
+  .actions button {
+    padding: 0.75rem 1.5rem;
+  }
 }
 
 .csv-upload {
@@ -116,17 +231,37 @@ table {
   border-collapse: collapse;
   background: white;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  font-size: 0.9rem;
+  overflow-x: auto;
+  display: block;
+}
+
+@media (min-width: 768px) {
+  table {
+    display: table;
+    font-size: 1rem;
+  }
 }
 
 th, td {
-  padding: 1rem;
+  padding: 0.75rem 0.5rem;
   text-align: left;
   border-bottom: 1px solid #ddd;
+  white-space: nowrap;
+}
+
+@media (min-width: 768px) {
+  th, td {
+    padding: 1rem;
+  }
 }
 
 th {
   background: #34495e;
   color: white;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .action-btn {
@@ -157,29 +292,62 @@ th {
   display: flex;
   justify-content: center;
   align-items: center;
+  z-index: 1000;
+  padding: 1rem;
+  overflow-y: auto;
 }
 
 .modal-content {
   background: white;
-  padding: 2rem;
+  padding: 1.5rem;
   border-radius: 8px;
-  min-width: 400px;
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
-.modal-content input {
+@media (min-width: 768px) {
+  .modal-content {
+    padding: 2rem;
+    min-width: 400px;
+  }
+}
+
+.modal-content h3 {
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.modal-content input,
+.modal-content select,
+.modal-content textarea {
   width: 100%;
-  padding: 0.5rem;
+  padding: 0.75rem;
   margin: 0.5rem 0;
   border: 1px solid #ddd;
   border-radius: 4px;
+  font-size: 1rem;
 }
 
 .modal-content button {
-  padding: 0.5rem 1rem;
-  margin: 0.5rem 0.25rem;
+  width: 100%;
+  padding: 0.75rem;
+  margin: 0.5rem 0;
   border: none;
   border-radius: 4px;
   cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  touch-action: manipulation;
+}
+
+@media (min-width: 768px) {
+  .modal-content button {
+    width: auto;
+    padding: 0.75rem 1.5rem;
+    margin: 0.5rem 0.25rem;
+  }
 }
 
 .modal-content button {
@@ -194,32 +362,74 @@ th {
   margin-bottom: 2rem;
 }
 
+.search-section {
+  margin-bottom: 1.5rem;
+}
+
+.search-section h2 {
+  font-size: 1.25rem;
+  margin-bottom: 0.75rem;
+}
+
 .search-bar {
   display: flex;
+  flex-direction: column;
   gap: 0.5rem;
   margin-top: 1rem;
 }
 
 .search-bar input {
-  flex: 1;
-  padding: 0.5rem;
+  width: 100%;
+  padding: 0.75rem;
   border: 1px solid #ddd;
   border-radius: 4px;
+  font-size: 1rem;
 }
 
 .search-bar select {
-  padding: 0.5rem;
+  width: 100%;
+  padding: 0.75rem;
   border: 1px solid #ddd;
   border-radius: 4px;
+  font-size: 1rem;
 }
 
 .search-bar button {
-  padding: 0.5rem 1rem;
+  width: 100%;
+  padding: 0.75rem;
   background: #3498db;
   color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  touch-action: manipulation;
+}
+
+.search-bar button:active {
+  background: #2980b9;
+}
+
+@media (min-width: 768px) {
+  .search-bar {
+    flex-direction: row;
+    align-items: center;
+  }
+  
+  .search-bar input {
+    flex: 1;
+  }
+  
+  .search-bar select {
+    width: auto;
+    min-width: 150px;
+  }
+  
+  .search-bar button {
+    width: auto;
+    padding: 0.75rem 1.5rem;
+  }
 }
 
 .product-group {
@@ -334,23 +544,60 @@ th {
 
 .filters {
   display: flex;
-  gap: 1rem;
+  flex-direction: column;
+  gap: 0.75rem;
   margin-top: 1rem;
-  flex-wrap: wrap;
-  align-items: center;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
 }
 
 .filters > div {
   display: flex;
+  flex-direction: column;
   gap: 0.5rem;
-  align-items: center;
 }
 
-.filters input[type="number"] {
-  width: 100px;
-  padding: 0.5rem;
+.filters label {
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.filters input[type="number"],
+.filters select {
+  width: 100%;
+  padding: 0.75rem;
   border: 1px solid #ddd;
   border-radius: 4px;
+  font-size: 1rem;
+}
+
+.filters input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  margin-right: 0.5rem;
+}
+
+@media (min-width: 768px) {
+  .filters {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  
+  .filters > div {
+    flex-direction: row;
+    align-items: center;
+  }
+  
+  .filters input[type="number"] {
+    width: 100px;
+  }
+  
+  .filters select {
+    width: auto;
+    min-width: 150px;
+  }
 }
 
 .item-image {
@@ -527,18 +774,29 @@ nav button {
 }
 
 .product-detail-card {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
   background: white;
-  padding: 2rem;
+  padding: 1rem;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
 
 .product-detail-image img {
   width: 100%;
+  max-height: 400px;
+  object-fit: contain;
   border-radius: 8px;
+}
+
+@media (min-width: 768px) {
+  .product-detail-card {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    padding: 2rem;
+  }
 }
 
 .product-detail-info h1 {
@@ -570,26 +828,52 @@ nav button {
 
 .product-actions {
   display: flex;
-  gap: 1rem;
-  margin-top: 2rem;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
 }
 
 .product-actions input {
-  width: 80px;
+  width: 100%;
   padding: 0.75rem;
   border: 1px solid #ddd;
   border-radius: 4px;
+  font-size: 1rem;
 }
 
 .product-actions button {
-  flex: 1;
-  padding: 0.75rem;
+  width: 100%;
+  padding: 1rem;
   background: #27ae60;
   color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 1rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  touch-action: manipulation;
+}
+
+.product-actions button:active {
+  background: #229954;
+  transform: scale(0.98);
+}
+
+@media (min-width: 768px) {
+  .product-actions {
+    flex-direction: row;
+    gap: 1rem;
+  }
+  
+  .product-actions input {
+    width: 100px;
+  }
+  
+  .product-actions button {
+    flex: 1;
+    padding: 0.75rem;
+    font-size: 1rem;
+  }
 }
 
 /* Store Details Page */
@@ -861,15 +1145,69 @@ nav button {
   color: #3498db;
 }
 
-/* Responsive */
+/* Touch-friendly improvements */
+button, a, input[type="submit"] {
+  -webkit-tap-highlight-color: rgba(0,0,0,0.1);
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Prevent zoom on input focus (iOS) */
+input, select, textarea {
+  font-size: 16px;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Hide scrollbar on mobile for cleaner look */
 @media (max-width: 768px) {
-  .product-detail-card {
-    grid-template-columns: 1fr;
+  ::-webkit-scrollbar {
+    width: 0px;
+    background: transparent;
+  }
+}
+
+/* Improve touch targets */
+.item-card a,
+.store-info a {
+  display: inline-block;
+  padding: 0.25rem 0;
+}
+
+/* Better mobile table */
+@media (max-width: 768px) {
+  table {
+    font-size: 0.8rem;
   }
   
-  .modal-content {
-    min-width: 90%;
-    max-width: 90%;
+  th, td {
+    padding: 0.5rem 0.25rem;
+  }
+  
+  .action-btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+  }
+}
+
+/* Sticky footer for cart on mobile */
+@media (max-width: 768px) {
+  body {
+    padding-bottom: 200px;
+  }
+  
+  #cart {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: 0;
+    border-radius: 0;
+    max-height: 200px;
+    overflow-y: auto;
   }
 }
 
@@ -918,4 +1256,217 @@ nav button {
   font-size: 1.2rem;
   font-weight: bold;
   margin-bottom: 0.5rem;
+}
+
+/* Additional mobile optimizations */
+
+/* Improve readability on small screens */
+@media (max-width: 480px) {
+  body {
+    font-size: 14px;
+  }
+  
+  h1 {
+    font-size: 1.5rem;
+  }
+  
+  h2 {
+    font-size: 1.25rem;
+  }
+  
+  h3 {
+    font-size: 1.1rem;
+  }
+}
+
+/* Better spacing for mobile */
+@media (max-width: 768px) {
+  .item-card {
+    padding: 0.75rem;
+  }
+  
+  .pharmacy-details,
+  .product-description,
+  .store-info-box,
+  .delivery-info {
+    padding: 0.75rem;
+    margin: 1rem 0;
+  }
+  
+  .store-info {
+    padding: 0.5rem;
+    font-size: 0.85rem;
+  }
+}
+
+/* Optimize images for mobile */
+.item-image {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+}
+
+@media (min-width: 768px) {
+  .item-image {
+    height: 200px;
+  }
+}
+
+/* Better cart item display on mobile */
+@media (max-width: 768px) {
+  .cart-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .cart-item-image {
+    width: 100%;
+    height: auto;
+    max-height: 150px;
+  }
+  
+  .cart-item button {
+    width: 100%;
+  }
+}
+
+/* Improve form inputs on mobile */
+@media (max-width: 768px) {
+  .auth-box {
+    min-width: 100%;
+    padding: 1.5rem;
+  }
+  
+  .auth-container {
+    padding: 1rem;
+  }
+}
+
+/* Better order cards on mobile */
+@media (max-width: 768px) {
+  .order-card {
+    padding: 1rem;
+  }
+  
+  .order-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .status-badge {
+    align-self: flex-start;
+  }
+}
+
+/* Optimize prescription viewer for mobile */
+@media (max-width: 768px) {
+  .prescription-modal {
+    max-width: 100%;
+    padding: 1rem;
+  }
+  
+  #prescriptionViewer {
+    min-height: 200px;
+  }
+  
+  .prescription-preview embed {
+    height: 400px;
+  }
+}
+
+/* Better review cards on mobile */
+@media (max-width: 768px) {
+  .review-card {
+    padding: 1rem;
+  }
+  
+  .reviews-section {
+    margin-top: 2rem;
+  }
+}
+
+/* Improve store details on mobile */
+@media (max-width: 768px) {
+  .store-detail-card {
+    padding: 1rem;
+  }
+  
+  .store-info-section {
+    padding: 0.75rem;
+    margin: 1rem 0;
+  }
+}
+
+/* Better product group display */
+@media (max-width: 768px) {
+  .product-group {
+    padding: 0.75rem;
+    margin: 1rem 0;
+  }
+  
+  .product-group h3 {
+    font-size: 1.1rem;
+  }
+  
+  .sort-options {
+    flex-direction: column;
+  }
+  
+  .sort-options button {
+    width: 100%;
+  }
+}
+
+/* Improve CSV upload section */
+@media (max-width: 768px) {
+  .csv-upload {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .csv-upload input,
+  .csv-upload button {
+    width: 100%;
+  }
+}
+
+/* Better modal actions on mobile */
+@media (max-width: 768px) {
+  .modal-actions {
+    flex-direction: column;
+  }
+  
+  .modal-actions button {
+    width: 100%;
+  }
+}
+
+/* Landscape orientation optimizations */
+@media (max-width: 768px) and (orientation: landscape) {
+  nav {
+    padding: 0.5rem 1rem;
+  }
+  
+  nav h1 {
+    font-size: 1rem;
+  }
+  
+  main {
+    padding: 0.5rem;
+  }
+}
+
+/* Safe area insets for notched devices */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: max(0px, env(safe-area-inset-left));
+    padding-right: max(0px, env(safe-area-inset-right));
+  }
+  
+  nav {
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
 }
