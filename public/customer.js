@@ -30,8 +30,7 @@ function renderItemCard(item) {
   const isPrescription = item.prescriptionRequired ? '<span class="prescription-badge">⚕️ Rx Required</span>' : '';
   const pharmacyInfo = item.category === 'pharmacy' ? `
     <p><strong>Drug:</strong> ${item.drugName}</p>
-    <p><strong>Brand:</strong> ${item.brandName}</p>
-    <p><strong>Generic:</strong> ${item.genericEquivalent}</p>
+    <p><strong>Form:</strong> ${item.dosageForm || 'N/A'}</p>
   ` : '';
   
   const distance = item.store?.distance ? `${item.store.distance.toFixed(1)} mi away` : '';
@@ -39,16 +38,18 @@ function renderItemCard(item) {
   
   return `
     <div class="item-card ${item.category}">
-      <img src="${item.image}" alt="${item.name}" class="item-image">
+      <a href="product-details.html?id=${item.id}">
+        <img src="${item.image}" alt="${item.name}" class="item-image">
+      </a>
       <span class="category-badge">${item.category}</span>
       ${isPrescription}
-      <h3>${item.name}</h3>
+      <h3><a href="product-details.html?id=${item.id}">${item.name}</a></h3>
       ${pharmacyInfo}
       <p>${item.description}</p>
       <div class="store-info">
-        <p><strong>${item.store?.name || 'Unknown'}</strong></p>
+        <p><strong><a href="store-details.html?id=${item.storeId}">${item.store?.name || 'Unknown'}</a></strong></p>
         <p>${item.store?.location || ''} ${distance}</p>
-        <p>${rating} <a href="#" onclick="showReviewModal(${item.storeId}); return false;">Write Review</a></p>
+        <p>${rating}</p>
       </div>
       <p class="price">$${item.price.toFixed(2)}</p>
       <p>In stock: ${item.stock}</p>
@@ -157,26 +158,71 @@ function removeFromCart(index) {
   updateCart();
 }
 
-function showCheckout() {
+async function showCheckout() {
   const modal = document.getElementById('checkoutModal');
   const itemsDiv = document.getElementById('checkoutItems');
   const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   
+  // Check if prescription is required
+  const requiresPrescription = cart.some(item => item.prescriptionRequired);
+  
   itemsDiv.innerHTML = cart.map(item => `
     <div class="checkout-item">
       ${item.name} x ${item.quantity} - $${(item.price * item.quantity).toFixed(2)}
+      ${item.prescriptionRequired ? ' <span class="prescription-badge">⚕️ Rx Required</span>' : ''}
     </div>
   `).join('');
   
   document.getElementById('orderTotal').innerHTML = `<strong>Total: $${total.toFixed(2)}</strong>`;
+  
+  // Show/hide prescription section
+  const prescriptionSection = document.getElementById('prescriptionSection');
+  if (requiresPrescription) {
+    prescriptionSection.style.display = 'block';
+    await loadPrescriptions();
+  } else {
+    prescriptionSection.style.display = 'none';
+  }
+  
   modal.style.display = 'flex';
   
   // Set default delivery address
-  authFetch('/api/auth/me')
-    .then(r => r.json())
-    .then(user => {
-      document.getElementById('deliveryAddress').value = user.address || '';
-    });
+  const userResponse = await authFetch('/api/auth/me');
+  const user = await userResponse.json();
+  document.getElementById('deliveryAddress').value = user.address || '';
+  
+  // Load stores for pickup option
+  loadPickupStores();
+}
+
+async function loadPrescriptions() {
+  const response = await authFetch('/api/prescriptions');
+  const prescriptions = await response.json();
+  
+  const select = document.getElementById('prescriptionSelect');
+  select.innerHTML = '<option value="">Select a prescription</option>' +
+    prescriptions.map(p => `
+      <option value="${p.id}">${p.fileName} - Uploaded ${new Date(p.uploadDate).toLocaleDateString()}</option>
+    `).join('') +
+    '<option value="upload">Upload New Prescription</option>';
+}
+
+async function loadPickupStores() {
+  const response = await authFetch('/api/stores');
+  const stores = await response.json();
+  
+  // Get unique stores from cart items
+  const storeIds = [...new Set(cart.map(item => item.storeId))];
+  const relevantStores = stores.filter(s => storeIds.includes(s.id));
+  
+  const pickupInfo = document.getElementById('pickupStoreInfo');
+  pickupInfo.innerHTML = relevantStores.map(store => `
+    <div class="pickup-store">
+      <p><strong>${store.name}</strong></p>
+      <p>📍 ${store.address}</p>
+      <p>🕒 ${store.hours}</p>
+    </div>
+  `).join('');
 }
 
 function hideCheckout() {
@@ -186,11 +232,26 @@ function hideCheckout() {
 async function completeCheckout() {
   const deliveryOption = document.getElementById('deliveryOption').value;
   const deliveryAddress = document.getElementById('deliveryAddress').value;
+  const prescriptionId = document.getElementById('prescriptionSelect')?.value;
   
   if (deliveryOption === 'delivery' && !deliveryAddress) {
     alert('Please enter a delivery address');
     return;
   }
+  
+  // Check if prescription is required
+  const requiresPrescription = cart.some(item => item.prescriptionRequired);
+  if (requiresPrescription && !prescriptionId) {
+    alert('Please select or upload a prescription for prescription items');
+    return;
+  }
+  
+  if (prescriptionId === 'upload') {
+    showPrescriptionUpload();
+    return;
+  }
+  
+  const pickupStoreId = deliveryOption === 'pickup' ? cart[0].storeId : null;
   
   const response = await authFetch('/api/checkout', {
     method: 'POST',
@@ -204,20 +265,71 @@ async function completeCheckout() {
         storeId: item.storeId
       })),
       deliveryOption,
-      deliveryAddress
+      deliveryAddress,
+      prescriptionId: prescriptionId || null,
+      pickupStoreId
     })
   });
   
   const order = await response.json();
   
   if (order.id) {
-    alert(`Order placed successfully! Order ID: ${order.id}`);
+    const message = order.status === 'pending_prescription_verification' 
+      ? `Order placed! Order ID: ${order.id}\n\nYour prescription is being verified by the pharmacy. You'll be notified once approved.`
+      : `Order placed successfully! Order ID: ${order.id}`;
+    alert(message);
     cart = [];
     updateCart();
     hideCheckout();
-    loadCatalog(); // Refresh to show updated stock
+    loadCatalog();
   } else {
     alert(order.error || 'Checkout failed');
+  }
+}
+
+function showPrescriptionUpload() {
+  hideCheckout();
+  document.getElementById('prescriptionUploadModal').style.display = 'flex';
+}
+
+function hidePrescriptionUpload() {
+  document.getElementById('prescriptionUploadModal').style.display = 'none';
+}
+
+async function uploadPrescription() {
+  const fileInput = document.getElementById('prescriptionFile');
+  const doctorName = document.getElementById('doctorName').value;
+  const issueDate = document.getElementById('issueDate').value;
+  const expiryDate = document.getElementById('expiryDate').value;
+  
+  if (!fileInput.files[0]) {
+    alert('Please select a prescription file');
+    return;
+  }
+  
+  const formData = new FormData();
+  formData.append('prescription', fileInput.files[0]);
+  formData.append('doctorName', doctorName);
+  formData.append('issueDate', issueDate);
+  formData.append('expiryDate', expiryDate);
+  
+  const token = localStorage.getItem('token');
+  const response = await fetch('/api/prescriptions/upload', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    },
+    body: formData
+  });
+  
+  const result = await response.json();
+  
+  if (result.id) {
+    alert('Prescription uploaded successfully!');
+    hidePrescriptionUpload();
+    showCheckout();
+  } else {
+    alert(result.error || 'Upload failed');
   }
 }
 
@@ -255,7 +367,29 @@ async function submitReview() {
 // Handle delivery option change
 document.getElementById('deliveryOption')?.addEventListener('change', (e) => {
   const addressSection = document.getElementById('deliveryAddressSection');
-  addressSection.style.display = e.target.value === 'delivery' ? 'block' : 'none';
+  const pickupInfo = document.getElementById('pickupStoreInfo');
+  
+  if (e.target.value === 'delivery') {
+    addressSection.style.display = 'block';
+    pickupInfo.style.display = 'none';
+  } else {
+    addressSection.style.display = 'none';
+    pickupInfo.style.display = 'block';
+  }
 });
+
+// Check for pending cart item from product details page
+const pendingItem = localStorage.getItem('pendingCartItem');
+if (pendingItem) {
+  const { productId, quantity } = JSON.parse(pendingItem);
+  authFetch(`/api/products/${productId}`)
+    .then(r => r.json())
+    .then(product => {
+      for (let i = 0; i < quantity; i++) {
+        addToCart(product);
+      }
+      localStorage.removeItem('pendingCartItem');
+    });
+}
 
 loadCatalog();

@@ -58,6 +58,9 @@ let stores = [
     name: 'Tech Store Downtown', 
     location: 'Downtown',
     address: '123 Main St, New York, NY 10001',
+    phone: '(212) 555-0100',
+    email: 'contact@techstore.com',
+    hours: 'Mon-Fri: 9AM-8PM, Sat-Sun: 10AM-6PM',
     lat: 40.7589,
     lng: -73.9851,
     type: 'general',
@@ -69,6 +72,9 @@ let stores = [
     name: 'City Pharmacy', 
     location: 'Midtown',
     address: '456 Park Ave, New York, NY 10022',
+    phone: '(212) 555-0200',
+    email: 'info@citypharmacy.com',
+    hours: 'Mon-Sat: 8AM-9PM, Sun: 9AM-7PM',
     lat: 40.7614,
     lng: -73.9776,
     type: 'pharmacy',
@@ -80,6 +86,9 @@ let stores = [
     name: 'HealthPlus Pharmacy', 
     location: 'Uptown',
     address: '789 Broadway, New York, NY 10003',
+    phone: '(212) 555-0300',
+    email: 'hello@healthplus.com',
+    hours: 'Mon-Fri: 8AM-10PM, Sat-Sun: 9AM-8PM',
     lat: 40.7505,
     lng: -73.9934,
     type: 'pharmacy',
@@ -97,7 +106,8 @@ let users = [
     name: 'John Doe',
     address: '100 Customer St, New York, NY 10001',
     lat: 40.7580,
-    lng: -73.9855
+    lng: -73.9855,
+    preferredStores: [2]
   },
   {
     id: 2,
@@ -125,7 +135,7 @@ let catalog = [
     id: 2, 
     name: 'Ibuprofen', 
     price: 12.99, 
-    description: 'Pain reliever',
+    description: 'Pain reliever and fever reducer',
     stock: 100,
     storeId: 2,
     category: 'pharmacy',
@@ -134,7 +144,12 @@ let catalog = [
     genericEquivalent: 'Ibuprofen',
     prescriptionRequired: false,
     image: 'https://via.placeholder.com/300x300?text=Ibuprofen',
-    deliveryOptions: ['pickup', 'delivery']
+    deliveryOptions: ['pickup', 'delivery'],
+    dosageForm: 'Tablet',
+    dosesPerPack: 50,
+    strength: '200mg',
+    activeIngredients: 'Ibuprofen 200mg',
+    warnings: 'Do not exceed recommended dose. Consult doctor if pregnant.'
   },
   { 
     id: 3, 
@@ -149,13 +164,18 @@ let catalog = [
     genericEquivalent: 'Ibuprofen',
     prescriptionRequired: false,
     image: 'https://via.placeholder.com/300x300?text=Ibuprofen+Generic',
-    deliveryOptions: ['pickup', 'delivery']
+    deliveryOptions: ['pickup', 'delivery'],
+    dosageForm: 'Tablet',
+    dosesPerPack: 100,
+    strength: '200mg',
+    activeIngredients: 'Ibuprofen 200mg',
+    warnings: 'Do not exceed recommended dose. Consult doctor if pregnant.'
   },
   { 
     id: 4, 
     name: 'Amoxicillin', 
     price: 24.99, 
-    description: 'Antibiotic',
+    description: 'Antibiotic for bacterial infections',
     stock: 50,
     storeId: 2,
     category: 'pharmacy',
@@ -164,20 +184,54 @@ let catalog = [
     genericEquivalent: 'Amoxicillin',
     prescriptionRequired: true,
     image: 'https://via.placeholder.com/300x300?text=Amoxicillin',
-    deliveryOptions: ['pickup']
+    deliveryOptions: ['pickup'],
+    dosageForm: 'Capsule',
+    dosesPerPack: 30,
+    strength: '500mg',
+    activeIngredients: 'Amoxicillin 500mg',
+    warnings: 'Complete full course. May cause allergic reactions.'
+  },
+  { 
+    id: 5, 
+    name: 'Cough Syrup', 
+    price: 15.99, 
+    description: 'Relief from cough and cold',
+    stock: 75,
+    storeId: 3,
+    category: 'pharmacy',
+    drugName: 'Dextromethorphan',
+    brandName: 'Robitussin',
+    genericEquivalent: 'Dextromethorphan',
+    prescriptionRequired: false,
+    image: 'https://via.placeholder.com/300x300?text=Cough+Syrup',
+    deliveryOptions: ['pickup', 'delivery'],
+    dosageForm: 'Syrup',
+    dosesPerPack: 20,
+    strength: '10mg/5ml',
+    activeIngredients: 'Dextromethorphan HBr 10mg per 5ml',
+    warnings: 'Do not drive after taking. May cause drowsiness.'
   }
 ];
 
-let reviews = [
+let storeReviews = [
   { id: 1, storeId: 2, userId: 1, rating: 5, comment: 'Great service!', date: new Date() },
   { id: 2, storeId: 2, userId: 1, rating: 4, comment: 'Fast delivery', date: new Date() }
 ];
 
+let productReviews = [
+  { id: 1, productId: 2, userId: 1, rating: 5, comment: 'Works great for headaches!', date: new Date() },
+  { id: 2, productId: 2, userId: 1, rating: 4, comment: 'Good value', date: new Date() }
+];
+
+let prescriptions = [];
+
 let orders = [];
 
-let nextId = 5;
+let nextId = 6;
 let nextUserId = 3;
-let nextReviewId = 3;
+let nextStoreReviewId = 3;
+let nextProductReviewId = 3;
+let nextPrescriptionId = 1;
 let nextOrderId = 1;
 
 // Auth API
@@ -313,11 +367,21 @@ app.get('/api/stores', (req, res) => {
   res.json(stores);
 });
 
-// Reviews API
+// Store Details API
+app.get('/api/stores/:storeId', (req, res) => {
+  const storeId = parseInt(req.params.storeId);
+  const store = stores.find(s => s.id === storeId);
+  if (!store) return res.status(404).json({ error: 'Store not found' });
+  
+  const reviews = storeReviews.filter(r => r.storeId === storeId);
+  res.json({ ...store, reviews });
+});
+
+// Store Reviews API
 app.get('/api/stores/:storeId/reviews', (req, res) => {
   const storeId = parseInt(req.params.storeId);
-  const storeReviews = reviews.filter(r => r.storeId === storeId);
-  res.json(storeReviews);
+  const reviews = storeReviews.filter(r => r.storeId === storeId);
+  res.json(reviews);
 });
 
 app.post('/api/stores/:storeId/reviews', authMiddleware, (req, res) => {
@@ -325,7 +389,7 @@ app.post('/api/stores/:storeId/reviews', authMiddleware, (req, res) => {
   const { rating, comment } = req.body;
   
   const review = {
-    id: nextReviewId++,
+    id: nextStoreReviewId++,
     storeId,
     userId: req.user.id,
     rating,
@@ -333,23 +397,132 @@ app.post('/api/stores/:storeId/reviews', authMiddleware, (req, res) => {
     date: new Date()
   };
   
-  reviews.push(review);
+  storeReviews.push(review);
   
   // Update store rating
-  const storeReviews = reviews.filter(r => r.storeId === storeId);
-  const avgRating = storeReviews.reduce((sum, r) => sum + r.rating, 0) / storeReviews.length;
+  const reviews = storeReviews.filter(r => r.storeId === storeId);
+  const avgRating = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
   const store = stores.find(s => s.id === storeId);
   if (store) {
     store.rating = avgRating;
-    store.totalReviews = storeReviews.length;
+    store.totalReviews = reviews.length;
   }
   
   res.json(review);
 });
 
+// Product Details API
+app.get('/api/products/:productId', authMiddleware, (req, res) => {
+  const productId = parseInt(req.params.productId);
+  const product = catalog.find(p => p.id === productId);
+  if (!product) return res.status(404).json({ error: 'Product not found' });
+  
+  const store = stores.find(s => s.id === product.storeId);
+  const reviews = productReviews.filter(r => r.productId === productId);
+  const user = users.find(u => u.id === req.user.id);
+  const distance = user && user.lat && user.lng ? 
+    calculateDistance(user.lat, user.lng, store.lat, store.lng) : 0;
+  
+  res.json({ 
+    ...product, 
+    store: { ...store, distance },
+    reviews 
+  });
+});
+
+// Product Reviews API
+app.post('/api/products/:productId/reviews', authMiddleware, (req, res) => {
+  const productId = parseInt(req.params.productId);
+  const { rating, comment } = req.body;
+  
+  const review = {
+    id: nextProductReviewId++,
+    productId,
+    userId: req.user.id,
+    rating,
+    comment,
+    date: new Date()
+  };
+  
+  productReviews.push(review);
+  res.json(review);
+});
+
+// Preferred Stores API
+app.post('/api/stores/:storeId/prefer', authMiddleware, (req, res) => {
+  const storeId = parseInt(req.params.storeId);
+  const user = users.find(u => u.id === req.user.id);
+  
+  if (!user.preferredStores) user.preferredStores = [];
+  
+  if (!user.preferredStores.includes(storeId)) {
+    user.preferredStores.push(storeId);
+  }
+  
+  res.json({ preferredStores: user.preferredStores });
+});
+
+app.delete('/api/stores/:storeId/prefer', authMiddleware, (req, res) => {
+  const storeId = parseInt(req.params.storeId);
+  const user = users.find(u => u.id === req.user.id);
+  
+  if (user.preferredStores) {
+    user.preferredStores = user.preferredStores.filter(id => id !== storeId);
+  }
+  
+  res.json({ preferredStores: user.preferredStores });
+});
+
+// Prescription API
+app.post('/api/prescriptions/upload', authMiddleware, upload.single('prescription'), (req, res) => {
+  try {
+    const prescription = {
+      id: nextPrescriptionId++,
+      userId: req.user.id,
+      fileName: req.file.originalname,
+      filePath: req.file.path,
+      uploadDate: new Date(),
+      status: 'pending',
+      doctorName: req.body.doctorName,
+      issueDate: req.body.issueDate,
+      expiryDate: req.body.expiryDate
+    };
+    
+    prescriptions.push(prescription);
+    res.json(prescription);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.get('/api/prescriptions', authMiddleware, (req, res) => {
+  const userPrescriptions = prescriptions.filter(p => p.userId === req.user.id);
+  res.json(userPrescriptions);
+});
+
+app.get('/api/prescriptions/:id/file', authMiddleware, (req, res) => {
+  const prescriptionId = parseInt(req.params.id);
+  const prescription = prescriptions.find(p => p.id === prescriptionId);
+  
+  if (!prescription) {
+    return res.status(404).json({ error: 'Prescription not found' });
+  }
+  
+  // Check authorization
+  const user = users.find(u => u.id === req.user.id);
+  const isOwner = prescription.userId === req.user.id;
+  const isSeller = user.role === 'seller';
+  
+  if (!isOwner && !isSeller) {
+    return res.status(403).json({ error: 'Unauthorized' });
+  }
+  
+  res.sendFile(path.resolve(prescription.filePath));
+});
+
 // Checkout API
 app.post('/api/checkout', authMiddleware, (req, res) => {
-  const { items, deliveryOption, deliveryAddress } = req.body;
+  const { items, deliveryOption, deliveryAddress, prescriptionId, pickupStoreId } = req.body;
   
   // Validate stock
   for (const item of items) {
@@ -359,6 +532,16 @@ app.post('/api/checkout', authMiddleware, (req, res) => {
     }
   }
   
+  // Check if prescription is required
+  const requiresPrescription = items.some(item => {
+    const catalogItem = catalog.find(c => c.id === item.id);
+    return catalogItem && catalogItem.prescriptionRequired;
+  });
+  
+  if (requiresPrescription && !prescriptionId) {
+    return res.status(400).json({ error: 'Prescription required for this order' });
+  }
+  
   // Create order
   const order = {
     id: nextOrderId++,
@@ -366,8 +549,10 @@ app.post('/api/checkout', authMiddleware, (req, res) => {
     items,
     deliveryOption,
     deliveryAddress,
+    pickupStoreId,
+    prescriptionId,
     total: items.reduce((sum, item) => sum + (item.price * item.quantity), 0),
-    status: 'pending',
+    status: requiresPrescription ? 'pending_prescription_verification' : 'pending',
     createdAt: new Date()
   };
   
@@ -386,8 +571,56 @@ app.post('/api/checkout', authMiddleware, (req, res) => {
 
 // Get user orders
 app.get('/api/orders', authMiddleware, (req, res) => {
-  const userOrders = orders.filter(o => o.userId === req.user.id);
-  res.json(userOrders);
+  const user = users.find(u => u.id === req.user.id);
+  
+  if (user.role === 'seller') {
+    // Sellers see orders for their store
+    const storeOrders = orders.filter(o => 
+      o.items.some(item => {
+        const product = catalog.find(p => p.id === item.id);
+        return product && product.storeId === user.storeId;
+      })
+    );
+    res.json(storeOrders);
+  } else {
+    // Customers see their own orders
+    const userOrders = orders.filter(o => o.userId === req.user.id);
+    res.json(userOrders);
+  }
+});
+
+// Seller: Verify prescription and update order status
+app.post('/api/orders/:orderId/verify-prescription', authMiddleware, (req, res) => {
+  const orderId = parseInt(req.params.orderId);
+  const { approved, notes } = req.body;
+  const user = users.find(u => u.id === req.user.id);
+  
+  if (user.role !== 'seller') {
+    return res.status(403).json({ error: 'Only sellers can verify prescriptions' });
+  }
+  
+  const order = orders.find(o => o.id === orderId);
+  if (!order) {
+    return res.status(404).json({ error: 'Order not found' });
+  }
+  
+  // Check if order belongs to seller's store
+  const belongsToStore = order.items.some(item => {
+    const product = catalog.find(p => p.id === item.id);
+    return product && product.storeId === user.storeId;
+  });
+  
+  if (!belongsToStore) {
+    return res.status(403).json({ error: 'Order does not belong to your store' });
+  }
+  
+  order.status = approved ? 'confirmed' : 'rejected';
+  order.prescriptionVerified = approved;
+  order.verificationNotes = notes;
+  order.verifiedAt = new Date();
+  order.verifiedBy = req.user.id;
+  
+  res.json(order);
 });
 
 // Product recommendations

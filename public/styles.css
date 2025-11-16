@@ -519,3 +519,356 @@ nav button {
   margin-right: 1rem;
   color: white;
 }
+
+/* Product Details Page */
+.product-details-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.product-detail-card {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.product-detail-image img {
+  width: 100%;
+  border-radius: 8px;
+}
+
+.product-detail-info h1 {
+  margin-bottom: 1rem;
+}
+
+.pharmacy-details,
+.product-description,
+.store-info-box,
+.delivery-info,
+.stock-info {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.pharmacy-details h3,
+.product-description h3,
+.store-info-box h3,
+.delivery-info h3 {
+  margin-bottom: 0.5rem;
+}
+
+.warnings {
+  color: #e74c3c;
+  font-weight: bold;
+}
+
+.product-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.product-actions input {
+  width: 80px;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.product-actions button {
+  flex: 1;
+  padding: 0.75rem;
+  background: #27ae60;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+/* Store Details Page */
+.store-details-container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.store-detail-card {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.store-rating {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+.rating-stars {
+  font-size: 1.5rem;
+}
+
+.rating-count {
+  color: #666;
+}
+
+.store-info-section {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.store-info-section h3 {
+  margin-bottom: 0.5rem;
+}
+
+.store-actions {
+  margin-top: 2rem;
+}
+
+.store-actions button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.store-actions button.preferred {
+  background: #e74c3c;
+  color: white;
+}
+
+.store-actions button:not(.preferred) {
+  background: #ecf0f1;
+  color: #333;
+}
+
+/* Reviews Section */
+.reviews-section {
+  margin-top: 3rem;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.reviews-section h2 {
+  margin-bottom: 1rem;
+}
+
+.reviews-section button {
+  margin-bottom: 1.5rem;
+  padding: 0.75rem 1.5rem;
+  background: #3498db;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.review-card {
+  background: white;
+  padding: 1.5rem;
+  margin: 1rem 0;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.review-rating {
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+}
+
+.review-comment {
+  margin: 0.5rem 0;
+  color: #333;
+}
+
+.review-date {
+  font-size: 0.85rem;
+  color: #999;
+  margin-top: 0.5rem;
+}
+
+/* Checkout Modal Enhancements */
+.checkout-modal {
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+#prescriptionSection {
+  margin: 1rem 0;
+}
+
+#prescriptionSection select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.pickup-store {
+  background: #f8f9fa;
+  padding: 1rem;
+  margin: 0.5rem 0;
+  border-radius: 4px;
+}
+
+/* Order Management */
+.order-card {
+  background: white;
+  padding: 1.5rem;
+  margin: 1rem 0;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.order-card.pending {
+  border-left: 4px solid #f39c12;
+}
+
+.order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+
+.status-badge.pending {
+  background: #ecf0f1;
+  color: #7f8c8d;
+}
+
+.status-badge.pending_prescription_verification {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.status-badge.confirmed {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status-badge.rejected {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.order-items {
+  margin: 1rem 0;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 4px;
+}
+
+.order-item {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #ddd;
+}
+
+.order-item:last-child {
+  border-bottom: none;
+}
+
+.verify-btn {
+  width: 100%;
+  padding: 0.75rem;
+  background: #3498db;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 1rem;
+}
+
+.prescription-modal {
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+#prescriptionViewer {
+  margin: 1rem 0;
+  min-height: 300px;
+  background: #f8f9fa;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.approve-btn {
+  flex: 1;
+  padding: 0.75rem;
+  background: #27ae60;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.reject-btn {
+  flex: 1;
+  padding: 0.75rem;
+  background: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.verification-notes {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: #e8f4f8;
+  border-radius: 4px;
+  font-style: italic;
+}
+
+/* Item card links */
+.item-card h3 a,
+.store-info a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.item-card h3 a:hover,
+.store-info a:hover {
+  text-decoration: underline;
+  color: #3498db;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .product-detail-card {
+    grid-template-columns: 1fr;
+  }
+  
+  .modal-content {
+    min-width: 90%;
+    max-width: 90%;
+  }
+}

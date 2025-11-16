@@ -69,9 +69,15 @@
     </div>
 
     <div id="checkoutModal" class="modal" style="display:none;">
-      <div class="modal-content">
+      <div class="modal-content checkout-modal">
         <h3>Checkout</h3>
         <div id="checkoutItems"></div>
+        
+        <div id="prescriptionSection" style="display:none;">
+          <label>Prescription:</label>
+          <select id="prescriptionSelect"></select>
+        </div>
+        
         <div>
           <label>Delivery Option:</label>
           <select id="deliveryOption">
@@ -79,13 +85,29 @@
             <option value="pickup">Store Pickup</option>
           </select>
         </div>
+        
         <div id="deliveryAddressSection">
           <label>Delivery Address:</label>
           <input type="text" id="deliveryAddress" placeholder="Enter delivery address">
         </div>
+        
+        <div id="pickupStoreInfo" style="display:none;"></div>
+        
         <div id="orderTotal"></div>
         <button onclick="completeCheckout()">Place Order</button>
         <button onclick="hideCheckout()">Cancel</button>
+      </div>
+    </div>
+
+    <div id="prescriptionUploadModal" class="modal" style="display:none;">
+      <div class="modal-content">
+        <h3>Upload Prescription</h3>
+        <input type="file" id="prescriptionFile" accept=".pdf,.jpg,.jpeg,.png">
+        <input type="text" id="doctorName" placeholder="Doctor's Name">
+        <input type="date" id="issueDate" placeholder="Issue Date">
+        <input type="date" id="expiryDate" placeholder="Expiry Date">
+        <button onclick="uploadPrescription()">Upload</button>
+        <button onclick="hidePrescriptionUpload()">Cancel</button>
       </div>
     </div>
 

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Details</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <nav>
+    <h1>Product Details</h1>
+    <div>
+      <a href="index.html">Back to Catalog</a>
+      <button onclick="logout()">Logout</button>
+    </div>
+  </nav>
+  
+  <main>
+    <div id="productDetails" class="product-details-container"></div>
+    
+    <section class="reviews-section">
+      <h2>Product Reviews</h2>
+      <button onclick="showProductReviewModal()">Write a Review</button>
+      <div id="productReviews"></div>
+    </section>
+
+    <div id="productReviewModal" class="modal" style="display:none;">
+      <div class="modal-content">
+        <h3>Write a Product Review</h3>
+        <div>
+          <label>Rating:</label>
+          <select id="productReviewRating">
+            <option value="5">5 Stars</option>
+            <option value="4">4 Stars</option>
+            <option value="3">3 Stars</option>
+            <option value="2">2 Stars</option>
+            <option value="1">1 Star</option>
+          </select>
+        </div>
+        <textarea id="productReviewComment" placeholder="Write your review..." rows="4"></textarea>
+        <button onclick="submitProductReview()">Submit Review</button>
+        <button onclick="hideProductReviewModal()">Cancel</button>
+      </div>
+    </div>
+  </main>
+
+  <script src="auth.js"></script>
+  <script src="product-details.js"></script>
+</body>
+</html>

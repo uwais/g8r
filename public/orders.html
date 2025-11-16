@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Management</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <nav>
+    <h1>Order Management</h1>
+    <div>
+      <a href="seller.html">Back to Inventory</a>
+      <button onclick="logout()">Logout</button>
+    </div>
+  </nav>
+  
+  <main>
+    <h2>Orders Requiring Prescription Verification</h2>
+    <div id="pendingOrders"></div>
+    
+    <h2>All Orders</h2>
+    <div id="allOrders"></div>
+
+    <div id="prescriptionModal" class="modal" style="display:none;">
+      <div class="modal-content prescription-modal">
+        <h3>Verify Prescription</h3>
+        <div id="prescriptionViewer"></div>
+        <input type="hidden" id="currentOrderId">
+        <textarea id="verificationNotes" placeholder="Add verification notes..." rows="3"></textarea>
+        <div class="modal-actions">
+          <button onclick="verifyPrescription(true)" class="approve-btn">Approve Order</button>
+          <button onclick="verifyPrescription(false)" class="reject-btn">Reject Order</button>
+          <button onclick="hidePrescriptionModal()">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="auth.js"></script>
+  <script src="orders.js"></script>
+</body>
+</html>

@@ -26,14 +26,17 @@ Visit http://localhost:3000
 **Customer Portal** (/)
 - User authentication and profiles with delivery address
 - Browse catalog with product images
+- **Product Details Page**: View detailed medication info (dosage form, strength, doses per pack, warnings)
+- **Store Details Page**: View store info (address, phone, hours, ratings) and mark as preferred
 - Advanced filtering (price range, prescription status, category)
 - Sort by price, distance, or store rating
 - Search products across multiple sellers
 - Compare prices and locations for same products
 - Product recommendations based on purchase history
-- Write and view store reviews/ratings
+- Write and view product reviews AND store reviews separately
 - Shopping cart with quantity selection
-- Checkout with delivery or pickup options
+- Checkout with delivery or pickup options (shows store address for pickup)
+- **Prescription Management**: Upload prescriptions (.pdf, .jpg, .png), maintain prescription history
 - Real-time stock updates
 
 **Seller Portal** (/seller.html)
@@ -41,8 +44,10 @@ Visit http://localhost:3000
 - View all catalog items by store
 - Add/edit/delete individual items
 - Product images and delivery options
-- Pharmacy-specific fields (drug name, brand, prescription flag)
+- Pharmacy-specific fields (drug name, brand, prescription flag, dosage form, strength, doses per pack)
 - Bulk upload via CSV
+- **Order Management** (/orders.html): View all orders, verify prescriptions for Rx items
+- **Prescription Verification Workflow**: View uploaded prescriptions, approve/reject orders with notes
 
 ## CSV Format
 
