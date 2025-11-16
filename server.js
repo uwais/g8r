@@ -8,12 +8,65 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import cookieParser from 'cookie-parser';
 import session from 'express-session';
+import morgan from 'morgan';
+import winston from 'winston';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const upload = multer({ dest: 'uploads/' });
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+
+// Winston Logger Configuration
+const logger = winston.createLogger({
+  level: process.env.LOG_LEVEL || 'info',
+  format: winston.format.combine(
+    winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+    winston.format.errors({ stack: true }),
+    winston.format.splat(),
+    winston.format.json()
+  ),
+  defaultMeta: { service: 'pharmacy-ecommerce' },
+  transports: [
+    // Write all logs to console
+    new winston.transports.Console({
+      format: winston.format.combine(
+        winston.format.colorize(),
+        winston.format.printf(({ timestamp, level, message, ...meta }) => {
+          let msg = `${timestamp} [${level}]: ${message}`;
+          if (Object.keys(meta).length > 0 && meta.service !== 'pharmacy-ecommerce') {
+            msg += ` ${JSON.stringify(meta)}`;
+          }
+          return msg;
+        })
+      )
+    }),
+    // Write errors to error.log
+    new winston.transports.File({ 
+      filename: 'logs/error.log', 
+      level: 'error',
+      format: winston.format.json()
+    }),
+    // Write all logs to combined.log
+    new winston.transports.File({ 
+      filename: 'logs/combined.log',
+      format: winston.format.json()
+    })
+  ]
+});
+
+// Create logs directory if it doesn't exist
+if (!fs.existsSync('logs')) {
+  fs.mkdirSync('logs');
+}
+
+// Morgan HTTP request logger with Winston
+const morganFormat = ':method :url :status :res[content-length] - :response-time ms';
+app.use(morgan(morganFormat, {
+  stream: {
+    write: (message) => logger.info(message.trim())
+  }
+}));
 
 app.use(express.json());
 app.use(cookieParser());
@@ -25,16 +78,23 @@ app.use(session({
 }));
 app.use(express.static('public'));
 
+logger.info('Application starting...');
+
 // Auth middleware
 const authMiddleware = (req, res, next) => {
   const token = req.headers.authorization?.split(' ')[1];
-  if (!token) return res.status(401).json({ error: 'Unauthorized' });
+  if (!token) {
+    logger.warn('Unauthorized access attempt', { path: req.path, ip: req.ip });
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
   
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     req.user = decoded;
+    logger.debug('User authenticated', { userId: decoded.id, email: decoded.email });
     next();
   } catch (error) {
+    logger.warn('Invalid token', { error: error.message, ip: req.ip });
     res.status(401).json({ error: 'Invalid token' });
   }
 };
@@ -236,46 +296,67 @@ let nextOrderId = 1;
 
 // Auth API
 app.post('/api/auth/register', async (req, res) => {
-  const { email, password, name, address, role } = req.body;
-  
-  if (users.find(u => u.email === email)) {
-    return res.status(400).json({ error: 'Email already exists' });
+  try {
+    const { email, password, name, address, role } = req.body;
+    
+    logger.info('Registration attempt', { email, role: role || 'customer' });
+    
+    if (users.find(u => u.email === email)) {
+      logger.warn('Registration failed - email exists', { email });
+      return res.status(400).json({ error: 'Email already exists' });
+    }
+    
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = {
+      id: nextUserId++,
+      email,
+      password: hashedPassword,
+      name,
+      address,
+      role: role || 'customer',
+      lat: 40.7580 + (Math.random() - 0.5) * 0.1,
+      lng: -73.9855 + (Math.random() - 0.5) * 0.1
+    };
+    
+    users.push(user);
+    const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET);
+    
+    logger.info('User registered successfully', { userId: user.id, email: user.email, role: user.role });
+    res.json({ token, user: { id: user.id, email: user.email, name: user.name, role: user.role } });
+  } catch (error) {
+    logger.error('Registration error', { error: error.message, stack: error.stack });
+    res.status(500).json({ error: 'Registration failed' });
   }
-  
-  const hashedPassword = await bcrypt.hash(password, 10);
-  const user = {
-    id: nextUserId++,
-    email,
-    password: hashedPassword,
-    name,
-    address,
-    role: role || 'customer',
-    lat: 40.7580 + (Math.random() - 0.5) * 0.1,
-    lng: -73.9855 + (Math.random() - 0.5) * 0.1
-  };
-  
-  users.push(user);
-  const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET);
-  
-  res.json({ token, user: { id: user.id, email: user.email, name: user.name, role: user.role } });
 });
 
 app.post('/api/auth/login', async (req, res) => {
-  const { email, password, role } = req.body;
-  const user = users.find(u => u.email === email && u.role === role);
-  
-  if (!user) {
-    return res.status(401).json({ error: 'Invalid credentials' });
+  try {
+    const { email, password, role } = req.body;
+    
+    logger.info('Login attempt', { email, role });
+    
+    const user = users.find(u => u.email === email && u.role === role);
+    
+    if (!user) {
+      logger.warn('Login failed - user not found', { email, role });
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+    
+    // Simple password check for demo (in production, use bcrypt.compare)
+    const validPassword = password === 'password123' || await bcrypt.compare(password, user.password);
+    if (!validPassword) {
+      logger.warn('Login failed - invalid password', { email });
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+    
+    const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET);
+    
+    logger.info('User logged in successfully', { userId: user.id, email: user.email, role: user.role });
+    res.json({ token, user: { id: user.id, email: user.email, name: user.name, role: user.role, storeId: user.storeId } });
+  } catch (error) {
+    logger.error('Login error', { error: error.message, stack: error.stack });
+    res.status(500).json({ error: 'Login failed' });
   }
-  
-  // Simple password check for demo (in production, use bcrypt.compare)
-  const validPassword = password === 'password123' || await bcrypt.compare(password, user.password);
-  if (!validPassword) {
-    return res.status(401).json({ error: 'Invalid credentials' });
-  }
-  
-  const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET);
-  res.json({ token, user: { id: user.id, email: user.email, name: user.name, role: user.role, storeId: user.storeId } });
 });
 
 app.get('/api/auth/me', authMiddleware, (req, res) => {
@@ -522,51 +603,90 @@ app.get('/api/prescriptions/:id/file', authMiddleware, (req, res) => {
 
 // Checkout API
 app.post('/api/checkout', authMiddleware, (req, res) => {
-  const { items, deliveryOption, deliveryAddress, prescriptionId, pickupStoreId } = req.body;
-  
-  // Validate stock
-  for (const item of items) {
-    const catalogItem = catalog.find(c => c.id === item.id);
-    if (!catalogItem || catalogItem.stock < item.quantity) {
-      return res.status(400).json({ error: `Insufficient stock for ${item.name}` });
+  try {
+    const { items, deliveryOption, deliveryAddress, prescriptionId, pickupStoreId } = req.body;
+    
+    logger.info('Checkout initiated', { 
+      userId: req.user.id, 
+      itemCount: items.length, 
+      deliveryOption,
+      requiresPrescription: items.some(i => {
+        const catalogItem = catalog.find(c => c.id === i.id);
+        return catalogItem?.prescriptionRequired;
+      })
+    });
+    
+    // Validate stock
+    for (const item of items) {
+      const catalogItem = catalog.find(c => c.id === item.id);
+      if (!catalogItem || catalogItem.stock < item.quantity) {
+        logger.warn('Checkout failed - insufficient stock', { 
+          userId: req.user.id, 
+          itemId: item.id, 
+          itemName: item.name,
+          requested: item.quantity,
+          available: catalogItem?.stock || 0
+        });
+        return res.status(400).json({ error: `Insufficient stock for ${item.name}` });
+      }
     }
-  }
-  
-  // Check if prescription is required
-  const requiresPrescription = items.some(item => {
-    const catalogItem = catalog.find(c => c.id === item.id);
-    return catalogItem && catalogItem.prescriptionRequired;
-  });
-  
-  if (requiresPrescription && !prescriptionId) {
-    return res.status(400).json({ error: 'Prescription required for this order' });
-  }
-  
-  // Create order
-  const order = {
-    id: nextOrderId++,
-    userId: req.user.id,
-    items,
-    deliveryOption,
-    deliveryAddress,
-    pickupStoreId,
-    prescriptionId,
-    total: items.reduce((sum, item) => sum + (item.price * item.quantity), 0),
-    status: requiresPrescription ? 'pending_prescription_verification' : 'pending',
-    createdAt: new Date()
-  };
-  
-  orders.push(order);
-  
-  // Update stock
-  items.forEach(item => {
-    const catalogItem = catalog.find(c => c.id === item.id);
-    if (catalogItem) {
-      catalogItem.stock -= item.quantity;
+    
+    // Check if prescription is required
+    const requiresPrescription = items.some(item => {
+      const catalogItem = catalog.find(c => c.id === item.id);
+      return catalogItem && catalogItem.prescriptionRequired;
+    });
+    
+    if (requiresPrescription && !prescriptionId) {
+      logger.warn('Checkout failed - prescription required', { userId: req.user.id });
+      return res.status(400).json({ error: 'Prescription required for this order' });
     }
-  });
-  
-  res.json(order);
+    
+    // Create order
+    const order = {
+      id: nextOrderId++,
+      userId: req.user.id,
+      items,
+      deliveryOption,
+      deliveryAddress,
+      pickupStoreId,
+      prescriptionId,
+      total: items.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+      status: requiresPrescription ? 'pending_prescription_verification' : 'pending',
+      createdAt: new Date()
+    };
+    
+    orders.push(order);
+    
+    // Update stock
+    items.forEach(item => {
+      const catalogItem = catalog.find(c => c.id === item.id);
+      if (catalogItem) {
+        catalogItem.stock -= item.quantity;
+        logger.debug('Stock updated', { 
+          itemId: catalogItem.id, 
+          itemName: catalogItem.name, 
+          newStock: catalogItem.stock 
+        });
+      }
+    });
+    
+    logger.info('Order created successfully', { 
+      orderId: order.id, 
+      userId: req.user.id, 
+      total: order.total,
+      status: order.status
+    });
+    
+    res.json(order);
+  } catch (error) {
+    logger.error('Checkout error', { 
+      error: error.message, 
+      stack: error.stack,
+      userId: req.user.id 
+    });
+    res.status(500).json({ error: 'Checkout failed' });
+  }
 });
 
 // Get user orders
@@ -591,36 +711,69 @@ app.get('/api/orders', authMiddleware, (req, res) => {
 
 // Seller: Verify prescription and update order status
 app.post('/api/orders/:orderId/verify-prescription', authMiddleware, (req, res) => {
-  const orderId = parseInt(req.params.orderId);
-  const { approved, notes } = req.body;
-  const user = users.find(u => u.id === req.user.id);
-  
-  if (user.role !== 'seller') {
-    return res.status(403).json({ error: 'Only sellers can verify prescriptions' });
+  try {
+    const orderId = parseInt(req.params.orderId);
+    const { approved, notes } = req.body;
+    const user = users.find(u => u.id === req.user.id);
+    
+    logger.info('Prescription verification attempt', { 
+      orderId, 
+      sellerId: req.user.id, 
+      approved 
+    });
+    
+    if (user.role !== 'seller') {
+      logger.warn('Unauthorized prescription verification attempt', { 
+        userId: req.user.id, 
+        role: user.role 
+      });
+      return res.status(403).json({ error: 'Only sellers can verify prescriptions' });
+    }
+    
+    const order = orders.find(o => o.id === orderId);
+    if (!order) {
+      logger.warn('Prescription verification failed - order not found', { orderId });
+      return res.status(404).json({ error: 'Order not found' });
+    }
+    
+    // Check if order belongs to seller's store
+    const belongsToStore = order.items.some(item => {
+      const product = catalog.find(p => p.id === item.id);
+      return product && product.storeId === user.storeId;
+    });
+    
+    if (!belongsToStore) {
+      logger.warn('Prescription verification failed - wrong store', { 
+        orderId, 
+        sellerId: req.user.id, 
+        sellerStoreId: user.storeId 
+      });
+      return res.status(403).json({ error: 'Order does not belong to your store' });
+    }
+    
+    order.status = approved ? 'confirmed' : 'rejected';
+    order.prescriptionVerified = approved;
+    order.verificationNotes = notes;
+    order.verifiedAt = new Date();
+    order.verifiedBy = req.user.id;
+    
+    logger.info('Prescription verification completed', { 
+      orderId, 
+      approved, 
+      sellerId: req.user.id,
+      newStatus: order.status
+    });
+    
+    res.json(order);
+  } catch (error) {
+    logger.error('Prescription verification error', { 
+      error: error.message, 
+      stack: error.stack,
+      orderId: req.params.orderId,
+      sellerId: req.user.id
+    });
+    res.status(500).json({ error: 'Verification failed' });
   }
-  
-  const order = orders.find(o => o.id === orderId);
-  if (!order) {
-    return res.status(404).json({ error: 'Order not found' });
-  }
-  
-  // Check if order belongs to seller's store
-  const belongsToStore = order.items.some(item => {
-    const product = catalog.find(p => p.id === item.id);
-    return product && product.storeId === user.storeId;
-  });
-  
-  if (!belongsToStore) {
-    return res.status(403).json({ error: 'Order does not belong to your store' });
-  }
-  
-  order.status = approved ? 'confirmed' : 'rejected';
-  order.prescriptionVerified = approved;
-  order.verificationNotes = notes;
-  order.verifiedAt = new Date();
-  order.verifiedBy = req.user.id;
-  
-  res.json(order);
 });
 
 // Product recommendations
@@ -727,7 +880,28 @@ app.post('/api/seller/upload-csv', upload.single('file'), (req, res) => {
   }
 });
 
+// Global error handler
+app.use((err, req, res, next) => {
+  logger.error('Unhandled error', {
+    error: err.message,
+    stack: err.stack,
+    path: req.path,
+    method: req.method,
+    ip: req.ip
+  });
+  
+  res.status(err.status || 500).json({
+    error: process.env.NODE_ENV === 'production' 
+      ? 'Internal server error' 
+      : err.message
+  });
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
+  logger.info(`Server started successfully on port ${PORT}`, {
+    environment: process.env.NODE_ENV || 'development',
+    port: PORT
+  });
   console.log(`Server running on port ${PORT}`);
 });
