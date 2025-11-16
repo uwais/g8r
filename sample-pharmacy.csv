@@ -1,6 +1,6 @@
-name,price,description,stock,category,drugName,brandName,genericEquivalent,prescriptionRequired
-Aspirin,8.99,Pain reliever and fever reducer,200,pharmacy,Aspirin,Bayer,Aspirin,false
-Lisinopril,15.99,Blood pressure medication,75,pharmacy,Lisinopril,Prinivil,Lisinopril,true
-Metformin,22.99,Diabetes medication,60,pharmacy,Metformin,Glucophage,Metformin,true
-Vitamin D,12.99,Vitamin supplement,150,pharmacy,Vitamin D3,Nature Made,Cholecalciferol,false
-Omeprazole,18.99,Acid reflux medication,80,pharmacy,Omeprazole,Prilosec,Omeprazole,false
+name,price,description,stock,category,drugName,brandName,genericEquivalent,prescriptionRequired,dosageForm,dosesPerPack,strength,activeIngredients,warnings,image
+Aspirin,8.99,Pain reliever and fever reducer,200,pharmacy,Aspirin,Bayer,Aspirin,false,Tablet,100,325mg,Aspirin 325mg,Do not exceed recommended dose,https://placehold.co/300x300/1abc9c/ffffff?text=Aspirin
+Lisinopril,15.99,Blood pressure medication,75,pharmacy,Lisinopril,Prinivil,Lisinopril,true,Tablet,30,10mg,Lisinopril 10mg,Monitor blood pressure regularly,https://placehold.co/300x300/e74c3c/ffffff?text=Lisinopril
+Metformin,22.99,Diabetes medication,60,pharmacy,Metformin,Glucophage,Metformin,true,Tablet,60,500mg,Metformin HCl 500mg,Take with meals,https://placehold.co/300x300/3498db/ffffff?text=Metformin
+Vitamin D,12.99,Vitamin supplement,150,pharmacy,Vitamin D3,Nature Made,Cholecalciferol,false,Softgel,100,2000IU,Cholecalciferol 2000IU,Consult doctor if taking other supplements,https://placehold.co/300x300/f39c12/ffffff?text=Vitamin+D
+Omeprazole,18.99,Acid reflux medication,80,pharmacy,Omeprazole,Prilosec,Omeprazole,false,Capsule,42,20mg,Omeprazole 20mg,Take before meals,https://placehold.co/300x300/9b59b6/ffffff?text=Omeprazole

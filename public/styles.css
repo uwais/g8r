@@ -1470,3 +1470,43 @@ html {
     padding-right: max(1rem, env(safe-area-inset-right));
   }
 }
+
+/* Image loading and error handling */
+.item-image,
+.product-detail-image img,
+.cart-item-image {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  position: relative;
+}
+
+.item-image::before,
+.product-detail-image img::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 50px;
+  height: 50px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 50%;
+}
+
+/* Fallback for broken images */
+img[alt]::after {
+  content: attr(alt);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 0.9rem;
+  text-align: center;
+  padding: 1rem;
+  width: 100%;
+}
+
+/* Loading state */
+img {
+  background: #f0f0f0;
+}

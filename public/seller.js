@@ -97,7 +97,7 @@ async function saveItem() {
     price: parseFloat(document.getElementById('itemPrice').value),
     description: document.getElementById('itemDescription').value,
     stock: parseInt(document.getElementById('itemStock').value),
-    image: document.getElementById('itemImage').value || 'https://via.placeholder.com/300x300?text=Product',
+    image: document.getElementById('itemImage').value || 'https://placehold.co/300x300/3498db/ffffff?text=Product',
     category: category,
     storeId: parseInt(storeId),
     deliveryOptions: ['pickup', 'delivery']
