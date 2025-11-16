@@ -1,6 +1,6 @@
-name,price,description,stock
-Monitor,299.99,27-inch LED monitor,15
-Webcam,89.99,HD webcam with microphone,25
-Headphones,149.99,Noise-canceling headphones,20
-USB Cable,9.99,USB-C cable 6ft,100
-Desk Lamp,39.99,LED desk lamp,40
+name,price,description,stock,category,image
+Laptop,999.99,High-performance laptop,10,general,https://placehold.co/300x300/3498db/ffffff?text=Laptop
+Mouse,29.99,Wireless mouse,50,general,https://placehold.co/300x300/2ecc71/ffffff?text=Mouse
+Keyboard,79.99,Mechanical keyboard,30,general,https://placehold.co/300x300/f39c12/ffffff?text=Keyboard
+Monitor,299.99,27-inch LED monitor,15,general,https://placehold.co/300x300/9b59b6/ffffff?text=Monitor
+Webcam,89.99,HD webcam with microphone,25,general,https://placehold.co/300x300/e74c3c/ffffff?text=Webcam
