@@ -557,11 +557,32 @@ app.delete('/api/stores/:storeId/prefer', authMiddleware, (req, res) => {
 // Prescription API
 app.post('/api/prescriptions/upload', authMiddleware, upload.single('prescription'), (req, res) => {
   try {
+    if (!req.file) {
+      logger.warn('Prescription upload failed - no file', { userId: req.user.id });
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+    
+    // Validate file type
+    const allowedTypes = ['.pdf', '.jpg', '.jpeg', '.png'];
+    const ext = path.extname(req.file.originalname).toLowerCase();
+    
+    if (!allowedTypes.includes(ext)) {
+      logger.warn('Prescription upload failed - invalid file type', { 
+        userId: req.user.id, 
+        fileName: req.file.originalname,
+        fileType: ext
+      });
+      fs.unlinkSync(req.file.path); // Delete invalid file
+      return res.status(400).json({ error: 'Invalid file type. Only PDF, JPG, and PNG are allowed.' });
+    }
+    
     const prescription = {
       id: nextPrescriptionId++,
       userId: req.user.id,
       fileName: req.file.originalname,
       filePath: req.file.path,
+      fileSize: req.file.size,
+      mimeType: req.file.mimetype,
       uploadDate: new Date(),
       status: 'pending',
       doctorName: req.body.doctorName,
@@ -570,8 +591,21 @@ app.post('/api/prescriptions/upload', authMiddleware, upload.single('prescriptio
     };
     
     prescriptions.push(prescription);
+    
+    logger.info('Prescription uploaded successfully', { 
+      prescriptionId: prescription.id,
+      userId: req.user.id,
+      fileName: prescription.fileName,
+      fileSize: prescription.fileSize
+    });
+    
     res.json(prescription);
   } catch (error) {
+    logger.error('Prescription upload error', { 
+      error: error.message, 
+      stack: error.stack,
+      userId: req.user.id
+    });
     res.status(400).json({ error: error.message });
   }
 });
@@ -582,23 +616,75 @@ app.get('/api/prescriptions', authMiddleware, (req, res) => {
 });
 
 app.get('/api/prescriptions/:id/file', authMiddleware, (req, res) => {
-  const prescriptionId = parseInt(req.params.id);
-  const prescription = prescriptions.find(p => p.id === prescriptionId);
-  
-  if (!prescription) {
-    return res.status(404).json({ error: 'Prescription not found' });
+  try {
+    const prescriptionId = parseInt(req.params.id);
+    const prescription = prescriptions.find(p => p.id === prescriptionId);
+    
+    if (!prescription) {
+      logger.warn('Prescription file not found', { prescriptionId });
+      return res.status(404).json({ error: 'Prescription not found' });
+    }
+    
+    // Check authorization
+    const user = users.find(u => u.id === req.user.id);
+    const isOwner = prescription.userId === req.user.id;
+    const isSeller = user.role === 'seller';
+    
+    if (!isOwner && !isSeller) {
+      logger.warn('Unauthorized prescription access attempt', { 
+        prescriptionId, 
+        userId: req.user.id 
+      });
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+    
+    const filePath = path.resolve(prescription.filePath);
+    
+    // Check if file exists
+    if (!fs.existsSync(filePath)) {
+      logger.error('Prescription file missing from disk', { 
+        prescriptionId, 
+        filePath 
+      });
+      return res.status(404).json({ error: 'File not found' });
+    }
+    
+    // Get file extension and set proper content type
+    const ext = path.extname(prescription.fileName).toLowerCase();
+    const contentTypes = {
+      '.pdf': 'application/pdf',
+      '.jpg': 'image/jpeg',
+      '.jpeg': 'image/jpeg',
+      '.png': 'image/png'
+    };
+    
+    const contentType = contentTypes[ext] || 'application/octet-stream';
+    
+    // Set headers for proper display and download
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Content-Disposition', `inline; filename="${prescription.fileName}"`);
+    
+    // For PDFs, add additional headers to ensure inline display
+    if (ext === '.pdf') {
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+    }
+    
+    logger.info('Prescription file accessed', { 
+      prescriptionId, 
+      userId: req.user.id,
+      fileName: prescription.fileName,
+      contentType
+    });
+    
+    res.sendFile(filePath);
+  } catch (error) {
+    logger.error('Error serving prescription file', { 
+      error: error.message, 
+      stack: error.stack,
+      prescriptionId: req.params.id
+    });
+    res.status(500).json({ error: 'Failed to retrieve file' });
   }
-  
-  // Check authorization
-  const user = users.find(u => u.id === req.user.id);
-  const isOwner = prescription.userId === req.user.id;
-  const isSeller = user.role === 'seller';
-  
-  if (!isOwner && !isSeller) {
-    return res.status(403).json({ error: 'Unauthorized' });
-  }
-  
-  res.sendFile(path.resolve(prescription.filePath));
 });
 
 // Checkout API

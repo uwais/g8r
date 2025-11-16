@@ -872,3 +872,50 @@ nav button {
     max-width: 90%;
   }
 }
+
+/* Prescription Preview Enhancements */
+.prescription-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.prescription-preview embed {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.prescription-preview img {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.download-link {
+  margin-top: 1rem;
+  padding: 0.75rem 1.5rem;
+  background: #3498db;
+  border-radius: 4px;
+}
+
+.download-link a {
+  color: white;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.download-link a:hover {
+  text-decoration: underline;
+}
+
+.error-message {
+  padding: 2rem;
+  text-align: center;
+  color: #e74c3c;
+}
+
+.error-message p:first-child {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}

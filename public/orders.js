@@ -79,22 +79,75 @@ async function viewPrescription(orderId, prescriptionId) {
   document.getElementById('currentOrderId').value = orderId;
   
   const viewer = document.getElementById('prescriptionViewer');
-  const fileUrl = `/api/prescriptions/${prescriptionId}/file`;
+  viewer.innerHTML = '<p>Loading prescription...</p>';
   
-  // Try to display the prescription
-  const response = await authFetch(fileUrl);
-  const blob = await response.blob();
-  const url = URL.createObjectURL(blob);
-  
-  if (blob.type.includes('pdf')) {
-    viewer.innerHTML = `<embed src="${url}" type="application/pdf" width="100%" height="500px">`;
-  } else if (blob.type.includes('image')) {
-    viewer.innerHTML = `<img src="${url}" style="max-width: 100%; max-height: 500px;">`;
-  } else {
-    viewer.innerHTML = `<p>Unable to preview. <a href="${url}" download>Download file</a></p>`;
+  try {
+    const fileUrl = `/api/prescriptions/${prescriptionId}/file`;
+    
+    // Fetch the file with auth
+    const response = await authFetch(fileUrl);
+    
+    if (!response.ok) {
+      throw new Error('Failed to load prescription');
+    }
+    
+    // Get content type from response headers
+    const contentType = response.headers.get('content-type');
+    const contentDisposition = response.headers.get('content-disposition');
+    
+    // Extract filename from content-disposition header
+    let fileName = 'prescription';
+    if (contentDisposition) {
+      const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(contentDisposition);
+      if (matches != null && matches[1]) {
+        fileName = matches[1].replace(/['"]/g, '');
+      }
+    }
+    
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    
+    // Display based on content type
+    if (contentType.includes('pdf')) {
+      viewer.innerHTML = `
+        <div class="prescription-preview">
+          <embed src="${url}" type="application/pdf" width="100%" height="600px">
+          <p class="download-link">
+            <a href="${url}" download="${fileName}">📥 Download ${fileName}</a>
+          </p>
+        </div>
+      `;
+    } else if (contentType.includes('image')) {
+      viewer.innerHTML = `
+        <div class="prescription-preview">
+          <img src="${url}" alt="Prescription" style="max-width: 100%; height: auto; border-radius: 8px;">
+          <p class="download-link">
+            <a href="${url}" download="${fileName}">📥 Download ${fileName}</a>
+          </p>
+        </div>
+      `;
+    } else {
+      viewer.innerHTML = `
+        <div class="prescription-preview">
+          <p>Preview not available for this file type.</p>
+          <p class="download-link">
+            <a href="${url}" download="${fileName}">📥 Download ${fileName}</a>
+          </p>
+        </div>
+      `;
+    }
+    
+    document.getElementById('prescriptionModal').style.display = 'flex';
+  } catch (error) {
+    console.error('Error loading prescription:', error);
+    viewer.innerHTML = `
+      <div class="error-message">
+        <p>❌ Failed to load prescription</p>
+        <p>${error.message}</p>
+      </div>
+    `;
+    document.getElementById('prescriptionModal').style.display = 'flex';
   }
-  
-  document.getElementById('prescriptionModal').style.display = 'flex';
 }
 
 function hidePrescriptionModal() {
