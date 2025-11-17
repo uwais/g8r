@@ -45,7 +45,8 @@ Visit http://localhost:3000
 - Add/edit/delete individual items
 - Product images and delivery options
 - Pharmacy-specific fields (drug name, brand, prescription flag, dosage form, strength, doses per pack)
-- Bulk upload via CSV
+- Bulk upload via CSV (web interface)
+- **Email-Based Inventory Updates**: Send CSV/PDF attachments to dedicated store email
 - **Order Management** (/orders.html): View all orders, verify prescriptions for Rx items
 - **Prescription Verification Workflow**: View uploaded prescriptions, approve/reject orders with notes
 

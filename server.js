@@ -80,6 +80,41 @@ app.use(express.static('public'));
 
 logger.info('Application starting...');
 
+// Email monitoring (optional - requires configuration)
+let emailMonitors = [];
+const EMAIL_MONITORING_ENABLED = process.env.ENABLE_EMAIL_MONITORING === 'true';
+
+if (EMAIL_MONITORING_ENABLED) {
+  import('./email-monitor.js').then(({ EmailInventoryMonitor, storeEmailConfig }) => {
+    logger.info('Starting email monitoring for stores...');
+    
+    // Create nextId reference object for email monitor
+    const nextIdRef = { value: nextId };
+    
+    Object.keys(storeEmailConfig).forEach(storeId => {
+      const monitor = new EmailInventoryMonitor(
+        parseInt(storeId),
+        storeEmailConfig[storeId],
+        catalog,
+        nextIdRef
+      );
+      monitor.start();
+      emailMonitors.push(monitor);
+    });
+    
+    logger.info(`Email monitoring started for ${emailMonitors.length} stores`);
+  }).catch(err => {
+    logger.error('Failed to start email monitoring:', err);
+  });
+}
+
+// Cleanup on shutdown
+process.on('SIGTERM', () => {
+  logger.info('SIGTERM received, shutting down gracefully...');
+  emailMonitors.forEach(monitor => monitor.stop());
+  process.exit(0);
+});
+
 // Auth middleware
 const authMiddleware = (req, res, next) => {
   const token = req.headers.authorization?.split(' ')[1];
